@@ -1,0 +1,18 @@
+{
+  "id": "08063abf",
+  "config": {
+    "num_traces": 1000,
+    "trace_length": 200,
+    "noise_level": 1.0,
+    "leakage_intensity": 0.8,
+    "masked": false,
+    "masking_strength": 0.5,
+    "timing_jitter": 2,
+    "key_string": "protected",
+    "seed": null
+  },
+  "shape": {
+    "num_traces": 1000,
+    "trace_length": 200
+  }
+}
