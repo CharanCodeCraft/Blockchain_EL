@@ -4,13 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, AudioWaveform, Shield, FlaskConical,
-  Layers, Cpu, BookOpen, Settings, ChevronLeft, ChevronRight, Zap
+  Layers, Cpu, BookOpen, Settings, ChevronLeft, ChevronRight, Zap, HardDrive
 } from "lucide-react";
 import { useState } from "react";
 
 const nav = [
   { href: "/", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/generator", icon: Cpu, label: "Synthetic Generator" },
+  { href: "/import", icon: HardDrive, label: "Import Dataset" },
   { href: "/trace-studio", icon: AudioWaveform, label: "Trace Studio" },
   { href: "/cpa-studio", icon: Shield, label: "CPA Studio" },
   { href: "/leakage-lab", icon: FlaskConical, label: "Leakage Lab" },

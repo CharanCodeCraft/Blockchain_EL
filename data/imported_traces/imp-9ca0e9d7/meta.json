@@ -1,0 +1,19 @@
+{
+  "id": "imp-9ca0e9d7",
+  "name": "ChipWhisperer Sample",
+  "description": "Simulated ChipWhisperer AES-128 capture for demonstration. 2000 traces with realistic noise and power line interference.",
+  "hardware_info": "Simulated CW308T-STM32F / 1MS/s",
+  "source": "imported",
+  "key_hex": "2b7e151628aed2a6abf7158809cf4f3c",
+  "shape": {
+    "num_traces": 2000,
+    "trace_length": 300
+  },
+  "config": {
+    "num_traces": 2000,
+    "trace_length": 300,
+    "masked": false,
+    "key_hex": "2b7e151628aed2a6abf7158809cf4f3c"
+  },
+  "imported_at": "2026-05-26T11:57:19.232480"
+}

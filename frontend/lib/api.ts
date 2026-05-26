@@ -69,6 +69,12 @@ export const maskingAPI = {
       method: "POST",
       body: JSON.stringify(body),
     }),
+
+  fullComparison: (body: MaskingFullComparisonRequest) =>
+    request<MaskingFullComparisonResult>("/api/masking/full-comparison", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
 };
 
 // ── Experiments ──────────────────────────────────────────────
@@ -99,6 +105,7 @@ export interface TraceGenerateRequest {
   masking_strength?: number;
   timing_jitter?: number;
   key_string?: string;
+  key_hex?: string;
   seed?: number | null;
 }
 
@@ -106,6 +113,8 @@ export interface DatasetMeta {
   id: string;
   config: TraceGenerateRequest;
   shape: { num_traces: number; trace_length: number };
+  key_hex?: string;
+  source?: "synthetic" | "imported";
 }
 
 export interface WaveformData {
@@ -128,6 +137,13 @@ export interface CPAFullResult {
   dataset_id: string;
   recovered_key: number[];
   recovered_key_hex: string[];
+  recovered_key_text?: string;
+  original_key?: number[];
+  original_key_hex?: string[];
+  original_key_text?: string;
+  byte_match?: boolean[];
+  full_match?: boolean;
+  match_count?: number;
   results: Record<string, CPAByteResult>;
 }
 
@@ -140,6 +156,19 @@ export interface CPAStreamEvent {
   corr_heatmap_best: number[];
   recovered_so_far: number[];
   done: boolean;
+  // Key verification (optional, sent when original key available)
+  correct_key?: number;
+  correct_key_hex?: string;
+  is_match?: boolean;
+  match_count_so_far?: number;
+  // Final event verification summary
+  original_key?: number[];
+  original_key_hex?: string[];
+  byte_match?: boolean[];
+  full_match?: boolean;
+  match_count?: number;
+  recovered_key_text?: string;
+  original_key_text?: string;
 }
 
 export interface TVLAResult {
@@ -191,6 +220,51 @@ export interface MaskingWaveformPair {
   masked: number[][];
   num_traces: number;
   trace_length: number;
+}
+
+export interface MaskingFullComparisonRequest {
+  dataset_id: string;
+  masking_strength?: number;
+  noise_level?: number;
+  leakage_intensity?: number;
+  seed?: number;
+}
+
+export interface MaskingPerByteResult {
+  byte_idx: number;
+  actual_key: number;
+  actual_key_hex: string;
+  unmasked_recovered: number;
+  unmasked_recovered_hex: string;
+  unmasked_correct: boolean;
+  unmasked_peak_corr: number;
+  masked_recovered: number;
+  masked_recovered_hex: string;
+  masked_correct: boolean;
+  masked_peak_corr: number;
+  correlation_reduction_pct: number;
+}
+
+export interface MaskingFullComparisonResult {
+  dataset_id: string;
+  per_byte: MaskingPerByteResult[];
+  summary: {
+    unmasked_recovery_rate: string;
+    unmasked_recovered_count: number;
+    masked_recovery_rate: string;
+    masked_recovered_count: number;
+    avg_correlation_unmasked: number;
+    avg_correlation_masked: number;
+    avg_leakage_reduction_pct: number;
+    complexity_rating: string;
+    masking_strength: number;
+    noise_level: number;
+    leakage_intensity: number;
+  };
+  original_key: number[];
+  original_key_hex: string;
+  unmasked_recovered_key: number[];
+  masked_recovered_key: number[];
 }
 
 export interface ExperimentSaveRequest {

@@ -75,12 +75,15 @@ def run_cpa(
 def run_cpa_streaming(
     traces: np.ndarray,
     plaintexts: np.ndarray,
+    key_bytes: np.ndarray = None,
 ) -> Generator[dict, None, None]:
     """
     Generator that yields per-byte CPA results one at a time.
     Used by the WebSocket router to stream progress.
+    If key_bytes is provided, includes verification info.
     """
     recovered = []
+    match_status = []
     for byte_idx in range(16):
         H = compute_hypotheses(plaintexts, byte_idx)
         corr = _pearson_matrix(H, traces)
@@ -90,7 +93,7 @@ def run_cpa_streaming(
         confidence = float(scores[best_key])
         recovered.append(best_key)
 
-        yield {
+        event = {
             "byte_idx": byte_idx,
             "best_key": best_key,
             "best_key_hex": hex(best_key),
@@ -101,3 +104,31 @@ def run_cpa_streaming(
             "recovered_so_far": list(recovered),
             "done": byte_idx == 15,
         }
+
+        # Add key verification if original key available
+        if key_bytes is not None:
+            correct_key = int(key_bytes[byte_idx])
+            is_match = best_key == correct_key
+            match_status.append(is_match)
+            event["correct_key"] = correct_key
+            event["correct_key_hex"] = hex(correct_key)
+            event["is_match"] = is_match
+            event["match_count_so_far"] = sum(match_status)
+
+            if byte_idx == 15:
+                # Final event — include full verification summary
+                original_key = key_bytes.tolist()
+                event["original_key"] = original_key
+                event["original_key_hex"] = [hex(b) for b in original_key]
+                event["byte_match"] = match_status
+                event["full_match"] = all(match_status)
+                event["match_count"] = sum(match_status)
+                # Text representations
+                event["recovered_key_text"] = "".join(
+                    chr(b) if 32 <= b < 127 else "." for b in recovered
+                )
+                event["original_key_text"] = "".join(
+                    chr(b) if 32 <= b < 127 else "." for b in original_key
+                )
+
+        yield event

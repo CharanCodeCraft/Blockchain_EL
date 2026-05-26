@@ -3,8 +3,8 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from ..engine.trace_generator import load_dataset
-from ..engine.leakage_engine import run_tvla, run_snr
+from engine.trace_generator import load_dataset
+from engine.leakage_engine import run_tvla, run_snr
 
 router = APIRouter(prefix="/api/leakage", tags=["leakage"])
 

@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from typing import Optional
 
-from ..engine.trace_generator import TraceConfig, generate_traces, list_datasets, load_dataset
+from engine.trace_generator import TraceConfig, generate_traces, list_datasets, load_dataset
 
 router = APIRouter(prefix="/api/traces", tags=["traces"])
 
@@ -20,6 +20,7 @@ class GenerateRequest(BaseModel):
     masking_strength: float = Field(default=0.5, ge=0.0, le=1.0)
     timing_jitter: int = Field(default=2, ge=0, le=10)
     key_string: str = Field(default="protected", max_length=16)
+    key_hex: Optional[str] = Field(default=None, pattern=r"^[0-9a-fA-F]{32}$")
     seed: Optional[int] = None
 
 

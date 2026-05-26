@@ -6,8 +6,9 @@ from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
 from typing import Optional
 
-from ..engine.trace_generator import load_dataset
-from ..engine.cpa_engine import run_cpa, run_cpa_streaming
+from engine.trace_generator import load_dataset
+from engine.cpa_engine import run_cpa, run_cpa_streaming
+import json
 
 router = APIRouter(prefix="/api/cpa", tags=["cpa"])
 
@@ -33,10 +34,32 @@ def run(req: CPARequest):
         else:
             recovered_key.append(None)
 
+    # Key verification — compare recovered vs original
+    original_key = key_bytes.tolist()
+    original_key_hex = [hex(b) for b in original_key]
+    byte_match = [recovered_key[i] == original_key[i] if recovered_key[i] is not None else False for i in range(16)]
+    match_count = sum(byte_match)
+    full_match = match_count == 16
+
+    # Build plaintext (text) representation of recovered key
+    recovered_key_text = "".join(
+        chr(b) if b is not None and 32 <= b < 127 else "." for b in recovered_key
+    )
+    original_key_text = "".join(
+        chr(b) if 32 <= b < 127 else "." for b in original_key
+    )
+
     return {
         "dataset_id": req.dataset_id,
         "recovered_key": recovered_key,
         "recovered_key_hex": [hex(k) if k is not None else None for k in recovered_key],
+        "recovered_key_text": recovered_key_text,
+        "original_key": original_key,
+        "original_key_hex": original_key_hex,
+        "original_key_text": original_key_text,
+        "byte_match": byte_match,
+        "full_match": full_match,
+        "match_count": match_count,
         "results": results,
     }
 
@@ -53,7 +76,7 @@ async def cpa_stream(websocket: WebSocket, dataset_id: str):
         return
 
     try:
-        for result in run_cpa_streaming(traces, plaintexts):
+        for result in run_cpa_streaming(traces, plaintexts, key_bytes=key_bytes):
             await websocket.send_json(result)
             await asyncio.sleep(0)  # yield to event loop
         await websocket.close()

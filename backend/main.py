@@ -3,7 +3,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import traces, cpa, leakage, masking, experiments
+from routers import traces, cpa, leakage, masking, experiments
+from routers import import_router
 
 app = FastAPI(
     title="CipherScope XAI API",
@@ -24,6 +25,7 @@ app.include_router(cpa.router)
 app.include_router(leakage.router)
 app.include_router(masking.router)
 app.include_router(experiments.router)
+app.include_router(import_router.router)
 
 
 @app.get("/")

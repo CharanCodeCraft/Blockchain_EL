@@ -11,6 +11,7 @@ import { Shield, Play, Loader2, ChevronDown, AlertCircle } from "lucide-react";
 
 const HeatmapChart = dynamic(() => import("@/components/charts/HeatmapChart"), { ssr: false });
 const ByteRecoveryGrid = dynamic(() => import("@/components/charts/ByteRecoveryGrid"), { ssr: false });
+const KeyVerificationPanel = dynamic(() => import("@/components/charts/KeyVerificationPanel"), { ssr: false });
 
 export default function CPAStudioPage() {
   const { activeDatasetId, setActiveDataset, setCpaStreaming, setCpaProgress, setCpaResult } = useAppStore();
@@ -24,6 +25,14 @@ export default function CPAStudioPage() {
   const [scores, setScores] = useState<number[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+
+  // Key verification state
+  const [originalKey, setOriginalKey] = useState<number[]>([]);
+  const [byteMatch, setByteMatch] = useState<boolean[]>(Array(16).fill(false));
+  const [fullMatch, setFullMatch] = useState(false);
+  const [matchCount, setMatchCount] = useState(0);
+  const [originalKeyText, setOriginalKeyText] = useState("");
+  const [recoveredKeyText, setRecoveredKeyText] = useState("");
 
   useEffect(() => {
     tracesAPI.list().then((r) => setDatasets(r.datasets)).catch(() => {});
@@ -46,6 +55,16 @@ export default function CPAStudioPage() {
       return next;
     });
 
+    // Live key match updates
+    if (ev.correct_key !== undefined && ev.is_match !== undefined) {
+      setByteMatch((prev) => {
+        const next = [...prev];
+        next[ev.byte_idx] = ev.is_match!;
+        return next;
+      });
+      setMatchCount(ev.match_count_so_far ?? 0);
+    }
+
     // Build heatmap from best correlation row
     if (ev.corr_heatmap_best.length) {
       setHeatmapData((prev) => {
@@ -61,6 +80,16 @@ export default function CPAStudioPage() {
       setCpaStreaming(false);
       setDone(true);
       setCurrentByte(undefined);
+
+      // Final verification data
+      if (ev.original_key) {
+        setOriginalKey(ev.original_key);
+        setFullMatch(ev.full_match ?? false);
+        setMatchCount(ev.match_count ?? 0);
+        setByteMatch(ev.byte_match ?? Array(16).fill(false));
+        setOriginalKeyText(ev.original_key_text ?? "");
+        setRecoveredKeyText(ev.recovered_key_text ?? "");
+      }
     }
   }, [setCpaProgress, setCpaStreaming]);
 
@@ -74,6 +103,12 @@ export default function CPAStudioPage() {
     setProgress(0);
     setStreaming(true);
     setCpaStreaming(true);
+    setOriginalKey([]);
+    setByteMatch(Array(16).fill(false));
+    setFullMatch(false);
+    setMatchCount(0);
+    setOriginalKeyText("");
+    setRecoveredKeyText("");
 
     const cleanup = createCPAStream(
       activeDatasetId,
@@ -145,6 +180,25 @@ export default function CPAStudioPage() {
           <div style={{ marginBottom: 16, display: "flex", gap: 8, color: "var(--rose)", fontSize: 13, padding: "12px 16px", background: "var(--rose-muted)", borderRadius: "var(--radius-md)", border: "1px solid rgba(244,63,94,0.3)" }}>
             <AlertCircle size={14} style={{ marginTop: 1, flexShrink: 0 }} /> {error}
           </div>
+        )}
+
+        {/* Key Verification Panel — shown when CPA is done and we have verification data */}
+        {done && originalKey.length === 16 && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+            className="glass" style={{ padding: 20, marginBottom: 20 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)", marginBottom: 16 }}>
+              🔑 Key Verification
+            </div>
+            <KeyVerificationPanel
+              originalKey={originalKey}
+              recoveredKey={recovered}
+              byteMatch={byteMatch}
+              fullMatch={fullMatch}
+              matchCount={matchCount}
+              originalKeyText={originalKeyText}
+              recoveredKeyText={recoveredKeyText}
+            />
+          </motion.div>
         )}
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
