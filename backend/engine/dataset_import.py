@@ -47,6 +47,7 @@ def register_imported_dataset(
     name: str = "Imported Dataset",
     description: str = "",
     hardware_info: str = "",
+    masked: bool = False,
 ) -> dict:
     """Save imported dataset to disk and return metadata dict."""
     os.makedirs(IMPORTED_DIR, exist_ok=True)
@@ -81,7 +82,7 @@ def register_imported_dataset(
         "config": {
             "num_traces": int(traces.shape[0]),
             "trace_length": int(traces.shape[1]),
-            "masked": False,
+            "masked": masked,
             "key_hex": key_hex,
         },
         "imported_at": datetime.utcnow().isoformat(),

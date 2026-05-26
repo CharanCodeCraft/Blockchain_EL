@@ -59,7 +59,11 @@ export default function LeakageLabPage() {
               <select className="input" style={{ width: 200, appearance: "none", paddingRight: 28 }}
                 value={activeDatasetId ?? ""} onChange={(e) => setActiveDataset(e.target.value || null)}>
                 <option value="">— select dataset —</option>
-                {datasets.map((d) => <option key={d.id} value={d.id}>{d.id}</option>)}
+                {datasets.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.id} ({d.shape.num_traces}×{d.shape.trace_length}){d.config?.masked ? " [masked]" : " [unmasked]"}
+                  </option>
+                ))}
               </select>
               <ChevronDown size={12} color="var(--text-muted)" style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
             </div>

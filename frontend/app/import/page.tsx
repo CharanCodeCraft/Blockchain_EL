@@ -21,6 +21,7 @@ export default function ImportPage() {
   const [datasetName, setDatasetName] = useState("Imported Dataset");
   const [description, setDescription] = useState("");
   const [hardwareInfo, setHardwareInfo] = useState("");
+  const [masked, setMasked] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ id: string; num_traces: number; trace_length: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +44,7 @@ export default function ImportPage() {
     formData.append("name", datasetName);
     formData.append("description", description);
     formData.append("hardware_info", hardwareInfo);
+    formData.append("masked", String(masked));
 
     try {
       const res = await fetch(`${BASE_URL}/api/datasets/import`, {
@@ -186,6 +188,18 @@ export default function ImportPage() {
                     <input className="input" value={hardwareInfo} onChange={(e) => setHardwareInfo(e.target.value)}
                       placeholder="ChipWhisperer CW308T-STM32F / 1MS/s" />
                   </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+                    <input
+                      type="checkbox"
+                      id="masked-checkbox"
+                      checked={masked}
+                      onChange={(e) => setMasked(e.target.checked)}
+                      style={{ cursor: "pointer" }}
+                    />
+                    <label htmlFor="masked-checkbox" style={{ fontSize: 12, color: "var(--text-secondary)", cursor: "pointer", userSelect: "none" }}>
+                      Is Masked Dataset (Contains Side-Channel Countermeasures)
+                    </label>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -202,6 +216,7 @@ export default function ImportPage() {
                   ["Plaintexts", plaintexts.name || "—", !!plaintexts.file],
                   ["Key", key.name || "(optional)", !!key.file],
                   ["Name", datasetName, datasetName.trim().length > 0],
+                  ["Masked", masked ? "Yes" : "No", true],
                 ].map(([label, value, ok]) => (
                   <div key={String(label)} style={{
                     display: "flex", justifyContent: "space-between", alignItems: "center",

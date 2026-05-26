@@ -38,20 +38,31 @@ export default function CPAStudioPage() {
     tracesAPI.list().then((r) => setDatasets(r.datasets)).catch(() => {});
   }, []);
 
-  const handleEvent = useCallback((ev: CPAStreamEvent) => {
+  const handleEvent = useCallback((ev: any) => {
+    if (!ev) return;
+    if (ev.error) {
+      setError(ev.error);
+      setStreaming(false);
+      setCpaStreaming(false);
+      return;
+    }
+    if (ev.byte_idx === undefined) return;
+
     setCurrentByte(ev.byte_idx);
     setProgress(ev.byte_idx + 1);
     setCpaProgress(ev.byte_idx + 1);
-    setScores(ev.scores);
+    if (ev.scores) {
+      setScores(ev.scores);
+    }
 
     setRecovered((prev) => {
       const next = [...prev];
-      next[ev.byte_idx] = ev.best_key;
+      next[ev.byte_idx] = ev.best_key !== undefined ? ev.best_key : null;
       return next;
     });
     setConfidences((prev) => {
       const next = [...prev];
-      next[ev.byte_idx] = ev.confidence;
+      next[ev.byte_idx] = ev.confidence !== undefined ? ev.confidence : 0;
       return next;
     });
 
@@ -66,7 +77,7 @@ export default function CPAStudioPage() {
     }
 
     // Build heatmap from best correlation row
-    if (ev.corr_heatmap_best.length) {
+    if (ev.corr_heatmap_best && ev.corr_heatmap_best.length) {
       setHeatmapData((prev) => {
         const next = [...prev];
         while (next.length <= ev.byte_idx) next.push([]);
@@ -127,7 +138,7 @@ export default function CPAStudioPage() {
   }
 
   // Scores bar chart data (last attacked byte)
-  const scoresForChart = scores.length
+  const scoresForChart = scores && scores.length
     ? scores.map((v, i) => ({ key: i, score: v }))
     : [];
 
@@ -147,7 +158,9 @@ export default function CPAStudioPage() {
                 value={activeDatasetId ?? ""} onChange={(e) => setActiveDataset(e.target.value || null)}>
                 <option value="">— select dataset —</option>
                 {datasets.map((d) => (
-                  <option key={d.id} value={d.id}>{d.id} ({d.shape.num_traces}×{d.shape.trace_length})</option>
+                  <option key={d.id} value={d.id}>
+                    {d.id} ({d.shape.num_traces}×{d.shape.trace_length}){d.config?.masked ? " [masked]" : " [unmasked]"}
+                  </option>
                 ))}
               </select>
               <ChevronDown size={12} color="var(--text-muted)" style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
@@ -221,7 +234,7 @@ export default function CPAStudioPage() {
             <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)", marginBottom: 12 }}>
               Correlation Scores — Byte {currentByte ?? "—"}
             </div>
-            {scores.length > 0 ? (
+            {scores && scores.length > 0 ? (
               <div style={{ display: "flex", alignItems: "flex-end", gap: 1, height: 120, overflow: "hidden" }}>
                 {scores.map((s, i) => {
                   const isBest = s === Math.max(...scores);
@@ -244,7 +257,7 @@ export default function CPAStudioPage() {
                 Run CPA to see correlation scores
               </div>
             )}
-            {scores.length > 0 && (
+            {scores && scores.length > 0 && (
               <div style={{ marginTop: 8, fontSize: 11, color: "var(--text-muted)" }}>
                 Best key: <span style={{ fontFamily: "var(--font-mono)", color: "var(--cyan)" }}>
                   0x{(recovered[currentByte ?? 0] ?? 0).toString(16).padStart(2, "0")}

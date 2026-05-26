@@ -39,6 +39,7 @@ async def import_dataset(
     name: str = Form(default="Imported Dataset"),
     description: str = Form(default=""),
     hardware_info: str = Form(default=""),
+    masked: bool = Form(default=False),
 ):
     """Import an external dataset from uploaded .npy files."""
     # Read files
@@ -66,6 +67,7 @@ async def import_dataset(
         name=name,
         description=description,
         hardware_info=hardware_info,
+        masked=masked,
     )
 
     return {"success": True, "dataset": meta}

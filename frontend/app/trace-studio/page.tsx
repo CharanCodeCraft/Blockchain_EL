@@ -65,7 +65,9 @@ export default function TraceStudioPage() {
               >
                 <option value="">— select —</option>
                 {allDatasets.map((d) => (
-                  <option key={d.id} value={d.id}>{d.id} ({d.shape.num_traces}×{d.shape.trace_length})</option>
+                  <option key={d.id} value={d.id}>
+                    {d.id} ({d.shape.num_traces}×{d.shape.trace_length}){d.config?.masked ? " [masked]" : " [unmasked]"}
+                  </option>
                 ))}
               </select>
               <ChevronDown size={12} color="var(--text-muted)" style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
