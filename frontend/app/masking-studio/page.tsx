@@ -58,7 +58,7 @@ export default function MaskingStudioPage() {
                 <option value="">— select dataset —</option>
                 {datasets.map((d) => (
                   <option key={d.id} value={d.id}>
-                    {d.id} {d.source === "imported" ? "📦" : ""}
+                    {d.id} ({d.shape.num_traces}×{d.shape.trace_length}){d.config?.masked ? " [masked]" : " [unmasked]"}{d.source === "imported" ? " 📦" : ""}
                   </option>
                 ))}
               </select>

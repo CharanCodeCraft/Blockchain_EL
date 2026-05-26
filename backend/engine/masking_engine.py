@@ -37,15 +37,35 @@ def generate_masked_pair(
         sbox_out = sbox_lookup_batch(xored)
         hw = hamming_weight_batch(sbox_out).astype(np.float32)
 
-        # Unmasked: direct leakage
+        # Unmasked: direct leakage — full HW correlation
         unmasked[:, t_leak] += hw * leakage_intensity
 
-        # Masked: leakage through combined share — reduced correlation
+        # Masked: realistic first-order leakage model.
+        #
+        # In a real masked hardware implementation, first-order Boolean
+        # masking splits the sensitive value S[p⊕k] into two shares:
+        #   share1 = S[p⊕k] ⊕ m   (stored/processed separately)
+        #   share2 = m              (the mask)
+        #
+        # Perfect masking means the power trace leaks ONLY the individual
+        # shares, which are independent of the secret key. However, real
+        # hardware has imperfections (glitches, coupling, timing) that
+        # cause a fraction of the unmasked leakage to "bleed through".
+        #
+        # We model this as a mixture:
+        #   leaked_signal = (1 - strength) * HW(S[p⊕k])        [real leakage]
+        #                 +  strength      * HW(S[p⊕k] ⊕ m)    [masked noise]
+        #
+        # At strength=0:   fully unmasked — identical to the unmasked trace
+        # At strength=1:   perfectly masked — only random share leakage
+        # In between:      partial countermeasure — reduced but nonzero correlation
         masks = rng.integers(0, 256, size=N, dtype=np.uint8)
         masked_out = sbox_out ^ masks
         hw_masked = hamming_weight_batch(masked_out).astype(np.float32)
-        effective = leakage_intensity * (1.0 - masking_strength)
-        masked[:, t_leak] += hw_masked * effective
+
+        real_leak = hw * leakage_intensity * (1.0 - masking_strength)
+        noise_leak = hw_masked * leakage_intensity * masking_strength
+        masked[:, t_leak] += real_leak + noise_leak
 
     return unmasked, masked
 
