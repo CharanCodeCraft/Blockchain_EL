@@ -1,0 +1,21 @@
+{
+  "id": "4a8a0e20",
+  "config": {
+    "num_traces": 1500,
+    "trace_length": 200,
+    "noise_level": 1.0,
+    "leakage_intensity": 0.8,
+    "masked": true,
+    "masking_strength": 0.5,
+    "timing_jitter": 2,
+    "key_string": "protected",
+    "key_hex": "7365637265746b657900000000000000",
+    "seed": null
+  },
+  "key_hex": "7365637265746b657900000000000000",
+  "shape": {
+    "num_traces": 1500,
+    "trace_length": 200
+  },
+  "source": "synthetic"
+}
